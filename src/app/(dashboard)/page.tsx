@@ -15,11 +15,15 @@ interface CategoryStat {
   categoryColor: string;
   totalAmount: number;
 }
+interface TimeSeriesStat {
+  date: string;
+  amount: number;
+}
 
 interface StatisticsData {
   totalSpending: number;
   categoryStatistics: CategoryStat[];
-  timeSeriesStats: any[];
+  timeSeriesStats: TimeSeriesStat[];
   dateRange: {
     startDate: string;
     endDate: string;

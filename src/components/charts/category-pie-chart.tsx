@@ -34,6 +34,16 @@ export default function CategoryPieChart({ data, title }: CategoryPieChartProps)
     percentage: (item.totalAmount / total) * 100,
   }));
 
+  // 定义自定义标签的参数接口
+  interface LabelProps {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percentage: number;
+  }
+
   // 自定义标签
   const renderCustomizedLabel = ({
     cx,
@@ -42,7 +52,7 @@ export default function CategoryPieChart({ data, title }: CategoryPieChartProps)
     innerRadius,
     outerRadius,
     percentage,
-  }: any) => {
+  }: LabelProps) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);

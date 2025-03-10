@@ -3,11 +3,15 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
+// 定义异步参数类型
+type ParamsType = Promise<{ id: string }>;
+
 // GET 获取单条记录
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    props: { params: ParamsType }
 ) {
+    const params = await props.params;
     try {
         const session = await getServerSession(authOptions);
 
@@ -16,7 +20,7 @@ export async function GET(
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 修改这里，添加 await
+        const { id } = params;
 
         // 确保id格式正确
         if (!id || typeof id !== "string") {
@@ -51,8 +55,9 @@ export async function GET(
 // PUT 更新记录
 export async function PUT(
     request: Request,
-    { params }: { params: { id: string } }
+    props: { params: ParamsType }
 ) {
+    const params = await props.params;
     try {
         const session = await getServerSession(authOptions);
 
@@ -61,7 +66,7 @@ export async function PUT(
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 修改这里，添加 await
+        const { id } = params;
 
         // 确保id格式正确
         if (!id || typeof id !== "string") {
@@ -135,8 +140,9 @@ export async function PUT(
 // DELETE 删除记录
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    props: { params: ParamsType }
 ) {
+    const params = await props.params;
     try {
         const session = await getServerSession(authOptions);
 
@@ -145,7 +151,7 @@ export async function DELETE(
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 修改这里，添加 await
+        const { id } = params;
 
         // 确保id格式正确
         if (!id || typeof id !== "string") {

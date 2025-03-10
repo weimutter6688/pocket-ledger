@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryForm } from "./CategoryForm";
 import { CategoryList } from "./CategoryList";
@@ -25,7 +25,7 @@ export function CategoryManagement({ userId, setError, setSuccess }: CategoryMan
   });
 
   // 获取分类列表
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setIsLoading(true);
     setError("");
 
@@ -44,13 +44,13 @@ export function CategoryManagement({ userId, setError, setSuccess }: CategoryMan
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setIsLoading, setError, setCategories]);
 
   useEffect(() => {
     if (userId) {
       fetchCategories();
     }
-  }, [userId]);
+  }, [userId, fetchCategories]);
 
   // 处理添加分类
   const handleAddCategory = async (e: React.FormEvent) => {

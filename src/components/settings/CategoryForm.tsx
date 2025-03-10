@@ -1,7 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Category, CategoryFormData } from "./types";
+import { CategoryFormData } from "./types";
 
 interface CategoryFormProps {
   formData: CategoryFormData;

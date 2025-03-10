@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
 // GET 获取分类列表
-export async function GET(request: Request) {
+export async function GET() {
     try {
         // 获取当前用户会话
         const session = await getServerSession(authOptions);

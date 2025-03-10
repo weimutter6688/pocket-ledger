@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 
 interface AccountManagementProps {
+  className?: string; // 添加一个可选的className属性，使接口非空
   // 可以根据需要添加更多属性，例如修改密码等功能
 }
 

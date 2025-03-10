@@ -1,16 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 
-interface RouteParams {
-    params: {
-        id: string;
-    };
-}
+// 定义异步参数类型
+type ParamsType = Promise<{ id: string }>;
 
 // GET 获取单个分类详情
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+    request: NextRequest,
+    props: { params: ParamsType }
+) {
+    const params = await props.params;
     try {
         // 获取当前用户会话
         const session = await getServerSession(authOptions);
@@ -20,7 +21,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 添加await
+        const { id } = params;
 
         // 获取分类详情，包括父分类信息
         const category = await prisma.category.findFirst({
@@ -80,7 +81,11 @@ export async function GET(request: Request, { params }: RouteParams) {
 }
 
 // PATCH 更新分类
-export async function PATCH(request: Request, { params }: RouteParams) {
+export async function PATCH(
+    request: Request,
+    props: { params: ParamsType }
+) {
+    const params = await props.params;
     try {
         // 获取当前用户会话
         const session = await getServerSession(authOptions);
@@ -90,7 +95,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 添加await
+        const { id } = params;
         const body = await request.json();
 
         // 检查分类是否存在
@@ -176,7 +181,11 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 }
 
 // DELETE 删除分类
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+    request: Request,
+    props: { params: ParamsType }
+) {
+    const params = await props.params;
     try {
         // 获取当前用户会话
         const session = await getServerSession(authOptions);
@@ -186,7 +195,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
         }
 
         const userId = session.user.id;
-        const { id } = await params; // 添加await
+        const { id } = params;
 
         // 检查分类是否存在
         const category = await prisma.category.findFirst({

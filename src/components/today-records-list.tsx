@@ -1,5 +1,4 @@
 import React from 'react';
-import { formatDate } from "@/lib/utils";
 
 interface Category {
   id: string;

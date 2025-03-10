@@ -87,8 +87,21 @@ export async function GET(request: Request) {
             0
         );
 
+        // 定义时间序列统计类型
+        interface DailyStats {
+            day: string;
+            totalAmount: number;
+        }
+
+        interface MonthlyStats {
+            month: string;
+            totalAmount: number;
+        }
+
+        type TimeSeriesStat = DailyStats | MonthlyStats;
+
         // 按天或月份统计
-        let timeSeriesStats: any[] = [];
+        let timeSeriesStats: TimeSeriesStat[] = [];
 
         if (period === "month") {
             // 按天统计

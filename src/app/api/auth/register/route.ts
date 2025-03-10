@@ -90,7 +90,11 @@ export async function POST(request: Request) {
                 password: hashedPassword,
                 // 创建默认分类 - 带描述的10个分类
                 categories: {
-                    create: defaultCategories as any, // 使用类型断言
+                    create: defaultCategories as {
+                        name: string;
+                        description: string;
+                        color: string;
+                    }[],
                 },
             },
         });

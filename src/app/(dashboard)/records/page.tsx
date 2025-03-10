@@ -98,7 +98,7 @@ export default function RecordsPage() {
     }
 
     fetchData();
-  }, [session, searchParams]);
+  }, [session, searchParams, filters.categoryId, filters.startDate, filters.endDate]);
 
   // 处理过滤条件变化
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,11 +58,43 @@ export default function NewRecordPage() {
   // 获取当前日期，格式为YYYY-MM-DD
   const currentDate = new Date().toISOString().split('T')[0];
   
+  // 获取当日记录
+  const fetchTodayRecords = useCallback(async () => {
+    if (!session?.user) return;
+    
+    setIsLoadingRecords(true);
+    try {
+      // 构建当日日期范围
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const startDate = today.toISOString().split('T')[0];
+      const endDate = tomorrow.toISOString().split('T')[0];
+      
+      // 获取当日记录
+      const response = await fetch(
+        `/api/records?startDate=${startDate}&endDate=${endDate}&limit=50`
+      );
+      
+      if (!response.ok) {
+        throw new Error("获取当日记录失败");
+      }
+      
+      const data = await response.json();
+      setTodayRecords(data.records);
+    } catch (err) {
+      console.error("获取当日记录失败:", err);
+    } finally {
+      setIsLoadingRecords(false);
+    }
+  }, [session, setIsLoadingRecords, setTodayRecords]);
+  
   // 初始化表单
   const {
     register,
     handleSubmit,
-    control,
     reset,
     formState: { errors },
   } = useForm<RecordFormValues>({
@@ -97,40 +129,7 @@ export default function NewRecordPage() {
       fetchData();
       fetchTodayRecords(); // 加载当日记录
     }
-  }, [session]);
-
-  // 获取当日记录
-  const fetchTodayRecords = async () => {
-    if (!session?.user) return;
-    
-    setIsLoadingRecords(true);
-    try {
-      // 构建当日日期范围
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const startDate = today.toISOString().split('T')[0];
-      const endDate = tomorrow.toISOString().split('T')[0];
-      
-      // 获取当日记录
-      const response = await fetch(
-        `/api/records?startDate=${startDate}&endDate=${endDate}&limit=50`
-      );
-      
-      if (!response.ok) {
-        throw new Error("获取当日记录失败");
-      }
-      
-      const data = await response.json();
-      setTodayRecords(data.records);
-    } catch (err) {
-      console.error("获取当日记录失败:", err);
-    } finally {
-      setIsLoadingRecords(false);
-    }
-  };
+  }, [session, fetchTodayRecords]);
 
   // 处理表单提交
   const onSubmit = async (data: RecordFormValues) => {
@@ -157,7 +156,7 @@ export default function NewRecordPage() {
       }
 
       // 添加成功后
-      const newRecord = await response.json();
+      await response.json();
       
       // 1. 刷新当日记录
       await fetchTodayRecords();
