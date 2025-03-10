@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id          String     @id @default(cuid())
+  username    String     @unique
+  password    String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  records     Record[]
+  categories  Category[]
+}
+
+// 分类模型
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  description String?    // 添加描述字段
+  color       String     @default("#6c5ce7")
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryHierarchy")
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records     Record[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([name, userId])
+}
+
+// 记录模型
+model Record {
+  id          String     @id @default(cuid())
+  amount      Float
+  date        DateTime   @default(now())
+  note        String?
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
