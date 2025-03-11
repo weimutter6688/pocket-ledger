@@ -84,6 +84,20 @@ export async function PUT(
             );
         }
 
+        // 验证日期格式
+        let recordDate;
+        try {
+            recordDate = new Date(data.date);
+            if (isNaN(recordDate.getTime())) {
+                throw new Error("无效的日期格式");
+            }
+        } catch {
+            return NextResponse.json(
+                { error: "无效的日期格式" },
+                { status: 400 }
+            );
+        }
+
         // 检查记录是否存在且属于当前用户
         const existingRecord = await prisma.record.findUnique({
             where: {
@@ -119,7 +133,7 @@ export async function PUT(
             data: {
                 amount: parseFloat(data.amount),
                 categoryId: data.categoryId,
-                date: new Date(data.date),
+                date: recordDate,
                 note: data.note || null,
             },
             include: {

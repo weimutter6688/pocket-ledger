@@ -64,14 +64,24 @@ export default function NewRecordPage() {
     
     setIsLoadingRecords(true);
     try {
-      // 构建当日日期范围
+      // 构建当日日期范围，使用本地时区格式化
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
-      const startDate = today.toISOString().split('T')[0];
-      const endDate = tomorrow.toISOString().split('T')[0];
+      // 使用本地日期格式化（YYYY-MM-DD）而不是ISO字符串，避免时区转换问题
+      const formatLocalDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const startDate = formatLocalDate(today);
+      const endDate = formatLocalDate(tomorrow);
+      
+      console.log('当前查询日期范围:', startDate, '至', endDate);
       
       // 获取当日记录
       const response = await fetch(

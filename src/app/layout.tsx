@@ -5,6 +5,11 @@ import { authOptions } from "@/lib/auth";
 import "./globals.css";
 import NextAuthProvider from "@/components/next-auth-provider";
 
+// 设置应用程序时区为中国时区
+if (typeof process !== 'undefined') {
+  process.env.TZ = 'Asia/Shanghai';
+}
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

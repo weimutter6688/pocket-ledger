@@ -119,9 +119,23 @@ export async function POST(request: Request) {
         // 验证必填字段
         const { amount, categoryId, date } = body;
 
-        if (!amount || !categoryId) {
+        if (!amount || !categoryId || !date) {
             return NextResponse.json(
-                { error: "金额和分类为必填项" },
+                { error: "金额、分类和日期为必填项" },
+                { status: 400 }
+            );
+        }
+
+        // 验证日期格式
+        let recordDate;
+        try {
+            recordDate = new Date(date);
+            if (isNaN(recordDate.getTime())) {
+                throw new Error("无效的日期格式");
+            }
+        } catch {
+            return NextResponse.json(
+                { error: "无效的日期格式" },
                 { status: 400 }
             );
         }
@@ -146,7 +160,7 @@ export async function POST(request: Request) {
             data: {
                 amount: Number(amount),
                 categoryId,
-                date: date ? new Date(date) : new Date(),
+                date: recordDate, // 使用前面已验证的日期对象
                 note: body.note || "",
                 userId,
             },

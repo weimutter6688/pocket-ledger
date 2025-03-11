@@ -45,8 +45,25 @@ export default function DashboardPage() {
       setError("");
 
       try {
-        // 获取最近记录
-        const recordsResponse = await fetch("/api/records?limit=5");
+        // 获取当前日期信息，用于筛选记录
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        
+        // 使用本地日期格式化（YYYY-MM-DD）而不是ISO字符串，避免时区转换问题
+        const formatLocalDate = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        // 使用日期过滤条件获取今日记录
+        const todayStart = formatLocalDate(today);
+        const todayEnd = formatLocalDate(tomorrow);
+        
+        console.log('主页当前查询日期范围:', todayStart, '至', todayEnd);
+        const recordsResponse = await fetch(`/api/records?limit=5&startDate=${todayStart}&endDate=${todayEnd}`);
         
         if (!recordsResponse.ok) {
           throw new Error("获取记录失败");
@@ -80,6 +97,49 @@ export default function DashboardPage() {
   // 导航到记录编辑页面
   const navigateToRecordEdit = (recordId: string) => {
     router.push(`/records/${recordId}`);
+  };
+  
+  // 删除记录
+  const handleDeleteRecord = async (recordId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/records/${recordId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("删除记录失败");
+      }
+      
+      // 删除成功后刷新记录列表
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      
+      // 使用本地日期格式化函数
+      const formatLocalDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const todayStart = formatLocalDate(today);
+      const todayEnd = formatLocalDate(tomorrow);
+      const recordsResponse = await fetch(`/api/records?limit=5&startDate=${todayStart}&endDate=${todayEnd}`);
+      const recordsData = await recordsResponse.json();
+      setRecentRecords(recordsData.records);
+      
+      // 刷新统计数据
+      const statsResponse = await fetch("/api/statistics");
+      const statsData = await statsResponse.json();
+      setStatistics(statsData);
+    } catch (err) {
+      console.error("删除记录失败:", err);
+      setError("删除记录失败，请稍后再试");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -139,7 +199,7 @@ export default function DashboardPage() {
       {/* 最近交易 */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900">最近交易</h2>
+          <h2 className="text-lg font-medium text-gray-900">今日交易记录</h2>
           <Link
             href="/records"
             className="text-sm font-medium text-blue-600 hover:text-blue-500"
@@ -158,7 +218,8 @@ export default function DashboardPage() {
               <RecordCard
                 key={record.id}
                 record={record}
-                onClick={() => navigateToRecordEdit(record.id)}
+                onEdit={navigateToRecordEdit}
+                onDelete={handleDeleteRecord}
               />
             ))}
           </div>

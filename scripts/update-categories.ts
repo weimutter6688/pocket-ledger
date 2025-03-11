@@ -76,7 +76,7 @@ async function updateCategories() {
             for (const newCategory of newCategories) {
                 // 检查是否已存在同名分类
                 const existingCategory = existingCategories.find(
-                    cat => cat.name.toLowerCase() === newCategory.name.toLowerCase()
+                    (cat: { name: string }) => cat.name.toLowerCase() === newCategory.name.toLowerCase()
                 );
 
                 if (existingCategory) {

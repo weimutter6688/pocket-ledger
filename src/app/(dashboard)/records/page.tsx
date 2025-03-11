@@ -147,6 +147,55 @@ export default function RecordsPage() {
     router.push(`/records/${recordId}`);
   };
 
+  // 删除记录
+  const handleDeleteRecord = async (recordId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/records/${recordId}`, {
+        method: "DELETE",
+      });
+      
+      if (!response.ok) {
+        throw new Error("删除记录失败");
+      }
+      
+      // 删除成功后刷新记录列表
+      // 构建查询参数
+      const page = searchParams.get("page") || "1";
+      const queryParams = new URLSearchParams({
+        page,
+        limit: "10",
+      });
+      
+      if (filters.categoryId) {
+        queryParams.append("categoryId", filters.categoryId);
+      }
+      
+      if (filters.startDate) {
+        queryParams.append("startDate", filters.startDate);
+      }
+      
+      if (filters.endDate) {
+        queryParams.append("endDate", filters.endDate);
+      }
+
+      // 获取记录
+      const recordsResponse = await fetch(`/api/records?${queryParams.toString()}`);
+      if (!recordsResponse.ok) {
+        throw new Error("获取记录失败");
+      }
+      
+      const data = await recordsResponse.json();
+      setRecords(data.records);
+      setPagination(data.pagination);
+    } catch (err) {
+      console.error("删除记录失败:", err);
+      setError("删除记录失败，请稍后再试");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-center">交易记录</h1>
@@ -234,7 +283,8 @@ export default function RecordsPage() {
               <RecordCard
                 key={record.id}
                 record={record}
-                onClick={() => navigateToRecordEdit(record.id)}
+                onEdit={navigateToRecordEdit}
+                onDelete={handleDeleteRecord}
               />
             ))}
           </div>

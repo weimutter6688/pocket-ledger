@@ -167,6 +167,7 @@ export async function PATCH(
                 name: body.name,
                 color: body.color,
                 parentId: body.parentId,
+                description: body.description,
             },
         });
 

@@ -118,6 +118,7 @@ export async function POST(request: Request) {
                 color: color || "#6c5ce7", // 默认颜色
                 parentId: body.parentId || null,
                 userId,
+                description: body.description || null,
             },
         });
 

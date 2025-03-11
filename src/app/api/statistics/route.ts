@@ -55,12 +55,19 @@ export async function GET(request: Request) {
             },
         });
 
+        type CategoryStat = {
+            categoryId: string;
+            _sum: {
+                amount: number | null;
+            };
+        };
+
         // 获取分类详情
         const categories = await prisma.category.findMany({
             where: {
                 userId,
                 id: {
-                    in: categoryStats.map((stat) => stat.categoryId),
+                    in: categoryStats.map((stat: CategoryStat) => stat.categoryId),
                 },
             },
             select: {
@@ -71,8 +78,8 @@ export async function GET(request: Request) {
         });
 
         // 合并分类统计数据
-        const categoryStatistics = categoryStats.map((stat) => {
-            const category = categories.find((cat) => cat.id === stat.categoryId);
+        const categoryStatistics = categoryStats.map((stat: { categoryId: string, _sum: { amount: number | null } }) => {
+            const category = categories.find((cat: { id: string, name: string, color: string }) => cat.id === stat.categoryId);
             return {
                 categoryId: stat.categoryId,
                 categoryName: category?.name || "未知分类",
@@ -83,7 +90,7 @@ export async function GET(request: Request) {
 
         // 计算总支出
         const totalSpending = categoryStatistics.reduce(
-            (sum, stat) => sum + stat.totalAmount,
+            (sum: number, stat: { totalAmount: number }) => sum + stat.totalAmount,
             0
         );
 
@@ -103,34 +110,75 @@ export async function GET(request: Request) {
         // 按天或月份统计
         let timeSeriesStats: TimeSeriesStat[] = [];
 
+        // 直接使用Prisma的类型安全查询，而不是原始SQL
         if (period === "month") {
             // 按天统计
-            const dailyStats = await prisma.$queryRaw`
-        SELECT 
-          date(date) as day, 
-          SUM(amount) as totalAmount
-        FROM "Record"
-        WHERE "userId" = ${userId}
-          AND date >= ${startDateTime}
-          AND date <= ${endDateTime}
-        GROUP BY day
-        ORDER BY day ASC
-      `;
-            timeSeriesStats = Array.isArray(dailyStats) ? dailyStats : [];
+            const records = await prisma.record.findMany({
+                where: {
+                    userId,
+                    date: {
+                        gte: startDateTime,
+                        lte: endDateTime,
+                    },
+                },
+                select: {
+                    date: true,
+                    amount: true,
+                },
+                orderBy: {
+                    date: 'asc',
+                },
+            });
+
+            // 使用JavaScript进行日期分组和汇总，保证时区一致性
+            const dailyMap = new Map<string, number>();
+            records.forEach((record: { date: Date; amount: number }) => {
+                // 提取日期部分 (YYYY-MM-DD)，确保使用记录的实际日期
+                const dateKey = record.date.toISOString().split('T')[0];
+                const currentAmount = dailyMap.get(dateKey) || 0;
+                dailyMap.set(dateKey, currentAmount + record.amount);
+            });
+
+            // 转换为时间序列统计格式
+            timeSeriesStats = Array.from(dailyMap.entries()).map(([day, totalAmount]) => ({
+                day,
+                totalAmount,
+            })).sort((a, b) => a.day.localeCompare(b.day));
+
         } else if (period === "year") {
             // 按月统计
-            const monthlyStats = await prisma.$queryRaw`
-        SELECT 
-          strftime('%Y-%m', date) as month, 
-          SUM(amount) as totalAmount
-        FROM "Record"
-        WHERE "userId" = ${userId}
-          AND date >= ${startDateTime}
-          AND date <= ${endDateTime}
-        GROUP BY month
-        ORDER BY month ASC
-      `;
-            timeSeriesStats = Array.isArray(monthlyStats) ? monthlyStats : [];
+            const records = await prisma.record.findMany({
+                where: {
+                    userId,
+                    date: {
+                        gte: startDateTime,
+                        lte: endDateTime,
+                    },
+                },
+                select: {
+                    date: true,
+                    amount: true,
+                },
+                orderBy: {
+                    date: 'asc',
+                },
+            });
+
+            // 使用JavaScript进行月份分组和汇总
+            const monthlyMap = new Map<string, number>();
+            records.forEach((record: { date: Date; amount: number }) => {
+                // 提取年月部分 (YYYY-MM)
+                const dateObj = record.date;
+                const month = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                const currentAmount = monthlyMap.get(month) || 0;
+                monthlyMap.set(month, currentAmount + record.amount);
+            });
+
+            // 转换为时间序列统计格式
+            timeSeriesStats = Array.from(monthlyMap.entries()).map(([month, totalAmount]) => ({
+                month,
+                totalAmount,
+            })).sort((a, b) => a.month.localeCompare(b.month));
         }
 
         return NextResponse.json({
