@@ -1,0 +1,62 @@
+module.exports = {
+  apps: [
+    {
+      // 应用程序名称，用于PM2中识别
+      name: 'pocket-ledger',
+      
+      // Next.js启动脚本路径
+      script: 'node_modules/next/dist/bin/next',
+      args: 'start', // 使用Next.js的start命令启动生产服务器
+      
+      // 实例数量配置
+      instances: 'max', // 根据CPU核心数自动扩展实例数量
+      exec_mode: 'cluster', // 使用集群模式运行多个实例
+      
+      // 文件监控配置
+      watch: false, // 不监控文件变化，生产环境建议关闭
+      
+      // 资源限制和自动重启配置
+      max_memory_restart: '1G', // 当内存使用超过1GB时自动重启应用
+      
+      // 环境变量配置
+      env: {
+        // 生产环境默认配置
+        NODE_ENV: 'production',
+        PORT: 3000, // 可以直接在这里修改端口号，例如改为8080
+      },
+      env_development: {
+        // 开发环境配置，使用 --env development 参数可以切换到此配置
+        NODE_ENV: 'development',
+        PORT: 3000, // 可以直接在这里修改开发环境的端口号
+      },
+      // 您还可以添加其他环境配置，例如：
+      // env_custom: {
+      //   NODE_ENV: 'production',
+      //   PORT: 8080,
+      // },
+      
+      // 日志配置
+      log_date_format: 'YYYY-MM-DD HH:mm:ss', // 日志中的日期格式
+      error_file: 'logs/error.log', // 错误日志文件路径
+      out_file: 'logs/out.log', // 标准输出日志文件路径
+      merge_logs: true, // 合并所有实例的日志
+      
+      // 优雅关闭配置
+      kill_timeout: 5000, // 给进程5秒时间来处理完当前请求后再关闭
+      wait_ready: true, // 等待应用发送ready信号后才认为启动成功
+      listen_timeout: 10000, // 等待应用监听端口的超时时间
+    },
+  ],
+
+  // 部署配置（用于自动化部署）
+  deploy: {
+    production: {
+      user: 'user', // 部署服务器的用户名
+      host: 'host_ip', // 部署服务器IP
+      ref: 'origin/main', // Git分支
+      repo: 'git_repository_url', // Git仓库地址
+      path: '/var/www/pocket-ledger', // 部署路径
+      'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.config.js --env production', // 部署后执行的命令
+    },
+  },
+};
