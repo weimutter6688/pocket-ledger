@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  pocket-ledger:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+    restart: unless-stopped
+    container_name: pocket-ledger
+    environment:
+      # 自定义默认用户名和密码
+      - DEFAULT_USERNAME=manager
+      - DEFAULT_PASSWORD=password123
+      # 其他环境变量
+      - NODE_ENV=production
+      - NEXTAUTH_SECRET=your-nextauth-secret
+      - NEXTAUTH_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      # 使用命名卷持久化数据库
+      - db-data:/app/prisma
+
+volumes:
+  # 定义持久化卷
+  db-data:
