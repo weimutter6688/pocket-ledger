@@ -1,6 +1,8 @@
 // 用于在容器启动时初始化默认用户和分类数据
-import { PrismaClient } from '@prisma/client';
-import { hashSync } from 'bcrypt';
+import * as prismaModule from '@prisma/client';
+import { hashSync } from 'bcryptjs';
+
+const PrismaClient = prismaModule.PrismaClient;
 
 const prisma = new PrismaClient();
 
